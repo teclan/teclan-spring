@@ -63,7 +63,7 @@ public class BatchFileUploadController {
     public ResponseEntity<byte[]> download() throws IOException {
         HttpHeaders headers = new HttpHeaders();
 
-        String path = "/home/dev/1xxx.odt";
+        String path = "/home/dev/Downloads/中文文件名-20161128161945.doc";
         File file = new File(path);
 
         if (!file.exists()) {
@@ -71,7 +71,13 @@ public class BatchFileUploadController {
             return null;
         }
 
-        headers.setContentDispositionFormData("attachment", file.getName());
+        String filename = file.getName();
+        // IE浏览器
+        // filename = URLEncoder.encode(filename, "UTF-8");
+        /// 其它浏览器
+        filename = new String(filename.getBytes("UTF-8"), "ISO-8859-1");
+
+        headers.setContentDispositionFormData("attachment", filename);
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file),
                 headers, HttpStatus.CREATED);

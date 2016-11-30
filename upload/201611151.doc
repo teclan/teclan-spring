@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
+FEcc扫厕所发打算反对第三方斯蒂芬森地方
+
+import os
+import os.path
+import sys
+
+PROJECTS_HOME       = '/home/dev/Codes/menglifang/java/pixiu'
+MG_BASE_DIR         = '/home/dev/Codes/maoguang/java/mg-base'
+MG_LOGCENTER_DIR    = '/home/dev/Codes/maoguang/java/mg-logcenter'
+YANG_SERVER_ADDRESS = '172.17.0.10'
+YIN_SERVER_ADDRESS  = '172.17.1.10'
+
+YANG_SERVER_USER_PASSWORD = '123456'
+YIN_SERVER_USER_PASSWORD  = '123456'
+
+def _update_base_project():
+    os.chdir(MG_BASE_DIR)
+    os.system('git pull origin master')
+    os.system('mvn clean install')
+    os.chdir(MG_LOGCENTER_DIR)
+    os.system('git pull origin master')
+    os.system('mvn clean install')
+
+def deploy_yang(projects):
+    for project in projects:
+        os.chdir('%s/%s' % (PROJECTS_HOME, project))
+        if os.path.exists('.env'):
+            os.system('rm .env')
+            os.system('cp env.example .env')
+            os.system("sed -i '/ADDRESS/c SERVER_ADDRESS=%s' .env " % YANG_SERVER_ADDRESS)
+            os.system("sed -i '/PASSWORD/c SERVER_USER_PASSWORD=%s' .env " % YANG_SERVER_USER_PASSWORD)
+        else:
+            os.system('cp env.example .env')
+            os.system("sed -i '/ADDRESS/c SERVER_ADDRESS=%s' .env " % YANG_SERVER_ADDRESS)
+            os.system("sed -i '/PASSWORD/c SERVER_USER_PASSWORD=%s' .env " % YANG_SERVER_USER_PASSWORD)
+        os.system('foreman run fab deploy:skip_test=True')
+
+def deploy_yin(projects):
+    for project in projects:
+        os.chdir('%s/%s' % (PROJECTS_HOME, project))
+        if os.path.exists('.env'):
+            os.system('rm .env')
+            os.system('cp env.example .env')
+            os.system("sed -i '/ADDRESS/c SERVER_ADDRESS=%s' .env " % YIN_SERVER_ADDRESS)
+            os.system("sed -i '/PASSWORD/c SERVER_USER_PASSWORD=%s' .env " % YIN_SERVER_USER_PASSWORD)
+        else:
+            os.system('cp env.example .env')
+            os.system("sed -i '/ADDRESS/c SERVER_ADDRESS=%s' .env " % YIN_SERVER_ADDRESS)
+            os.system("sed -i '/PASSWORD/c SERVER_USER_PASSWORD=%s' .env " % YIN_SERVER_USER_PASSWORD)
+        os.system('foreman run fab deploy:skip_test=True')
+
+def deploy_yang_proxy(yangproxy):
+    deploy_yang(yangproxy)
+
+def deploy_yin_proxy(yinproxy):
+    deploy_yin(yinproxy)
+
+def deploy_yang_api(yangapi):
+    deploy_yang(yangapi)
+
+def deploy_yin_api(yinapi):
+    deploy_yin(yinapi)
+
+def main():
+    # _update_base_project()
+    if sys.argv[1] == 'yangproxy':
+        deploy_yang_proxy(sys.argv[2:])
+    elif sys.argv[1] == 'yinproxy':
+        deploy_yin_proxy(sys.argv[2:])
+    elif sys.argv[1] == 'yangapi':
+        deploy_yang_api(sys.argv[2:])
+    elif sys.argv[1] == 'yinapi':
+        deploy_yin_api(sys.argv[2:])
+    else:
+        print 'Usage:python %s yangproxy|yinproxy|yangapi|yinapi projectname1 projectname2...',sys.argv[-2]
+
+if __name__ == '__main__':
+    main()
